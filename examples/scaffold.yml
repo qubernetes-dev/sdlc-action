@@ -1,0 +1,34 @@
+name: Scaffold issue documents
+
+on:
+  issues:
+    types: [opened, labeled, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to scaffold or retry
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Keep one writer per repository so ADR numbers are allocated serially.
+concurrency:
+  group: sdlc-scaffolding
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      # Replace the owner/repository and use a published release or pinned commit.
+      - uses: qubernetes-dev/sdlc-action@v1
+        with:
+          operation: scaffold
+          issue-number: ${{ github.event.inputs.issue_number || '' }}

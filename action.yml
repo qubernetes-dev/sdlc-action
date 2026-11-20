@@ -1,0 +1,91 @@
+name: SDLC scaffolding
+author: Qubernetes
+description: Scaffold issue specifications and ADRs, and synchronize their links after a merge.
+branding:
+  icon: git-pull-request
+  color: blue
+
+inputs:
+  operation:
+    description: Operation to run, scaffold or sync-links.
+    required: true
+  token:
+    description: GitHub token scoped to the consuming repository.
+    required: false
+    default: ${{ github.token }}
+  issue-number:
+    description: Issue number for manual scaffolding runs; issue events use their own issue.
+    required: false
+    default: ''
+  base-branch:
+    description: Target branch; defaults to the consuming repository's default branch.
+    required: false
+    default: ''
+  specs-directory:
+    description: Repository-relative directory for feature specifications.
+    required: false
+    default: doc/specs
+  adrs-directory:
+    description: Repository-relative directory for architecture decisions.
+    required: false
+    default: doc/adrs
+  spec-label:
+    description: Issue label requesting a specification.
+    required: false
+    default: needs-spec
+  adr-label:
+    description: Issue label requesting an ADR.
+    required: false
+    default: needs-adr
+  templates-directory:
+    description: Optional checked-out directory containing spec.md and/or adr.md overrides.
+    required: false
+    default: ''
+  dry-run:
+    description: Preview link updates without writing; supported only for sync-links.
+    required: false
+    default: 'false'
+
+outputs:
+  branch:
+    description: Branch containing the documents, or empty when scaffolding was skipped.
+    value: ${{ steps.automation.outputs.branch }}
+  pull-request-number:
+    description: Created or reused pull request number, or empty if no PR is needed.
+    value: ${{ steps.automation.outputs.pull-request-number }}
+  pull-request-url:
+    description: Created or reused pull request URL, or empty if no PR is needed.
+    value: ${{ steps.automation.outputs.pull-request-url }}
+  spec-path:
+    description: Repository-relative specification path, when present.
+    value: ${{ steps.automation.outputs.spec-path }}
+  adr-path:
+    description: Repository-relative ADR path, when present.
+    value: ${{ steps.automation.outputs.adr-path }}
+  updated-issues:
+    description: Number of issue bodies updated, or that would change during a dry run.
+    value: ${{ steps.automation.outputs.updated-issues }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Run SDLC automation
+      id: automation
+      shell: bash
+      env:
+        SDLC_ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+        SDLC_OPERATION: ${{ inputs.operation }}
+        SDLC_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        SDLC_BASE_BRANCH: ${{ inputs.base-branch }}
+        SDLC_SPECS_DIRECTORY: ${{ inputs.specs-directory }}
+        SDLC_ADRS_DIRECTORY: ${{ inputs.adrs-directory }}
+        SDLC_SPEC_LABEL: ${{ inputs.spec-label }}
+        SDLC_ADR_LABEL: ${{ inputs.adr-label }}
+        SDLC_TEMPLATES_DIRECTORY: ${{ inputs.templates-directory }}
+        SDLC_DRY_RUN: ${{ inputs.dry-run }}
+      run: python "$SDLC_ACTION_PATH/scripts/run.py"

@@ -1,0 +1,26 @@
+name: Update merged document links
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdlc-links-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      # No PR checkout: execute only the versioned action's scripts.
+      - uses: qubernetes-dev/sdlc-action@v1
+        with:
+          operation: sync-links

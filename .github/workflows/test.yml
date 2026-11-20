@@ -1,0 +1,45 @@
+name: Test SDLC action
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdlc-action-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run unit and action contract tests
+        run: python -m unittest discover -s tests -p 'test_*.py'
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run packaged action without a merged PR event
+        id: smoke
+        uses: ./
+        with:
+          operation: sync-links
+      - name: Verify no issue writes
+        env:
+          UPDATED_ISSUES: ${{ steps.smoke.outputs.updated-issues }}
+        run: test "$UPDATED_ISSUES" = '0'
