@@ -4,6 +4,8 @@ Create feature specifications and Architecture Decision Records from issue label
 
 This directory is prepared for extraction into its own repository. The examples assume the future repository is `qubernetes-dev/sdlc-action`; replace that name with your chosen owner and repository, and publish a release before using the examples.
 
+See the [development process](docs/development-process.md) for the issue-to-merge workflow, the Mermaid overview, and the boundary between automatic steps and contributor work.
+
 ## Operations
 
 | Operation | Trigger | Result |
